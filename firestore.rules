@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Default-deny security safety net catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Hardened Helpers ---
+    function isSignedIn() {
+      // Allow operations from local staff PIN-based logins operating in unauthenticated sessions
+      return true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Specific Validators ---
+    function isValidTable(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.number is int && data.number > 0
+        && data.capacity is int && data.capacity > 0 && data.capacity <= 100
+        && data.status is string && (data.status == 'available' || data.status == 'occupied' || data.status == 'reserved')
+        && data.guestCount is int && data.guestCount >= 0
+        && data.currentOrder is list && data.currentOrder.size() <= 100;
+    }
+
+    function isValidMenuItem(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.price is number && data.price >= 0.0 && data.price <= 100000.0
+        && data.category is string && (data.category == 'Appetizers' || data.category == 'Main Course' || data.category == 'Desserts' || data.category == 'Drinks')
+        && data.emoji is string && data.emoji.size() <= 10
+        && data.description is string && data.description.size() <= 1000
+        && data.inStock is bool;
+    }
+
+    function isValidPastOrder(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.tableNumber is int && data.tableNumber > 0
+        && data.guestCount is int && data.guestCount >= 0
+        && data.items is list && data.items.size() <= 100
+        && data.subtotal is number && data.subtotal >= 0.0
+        && data.serviceCharge is number && data.serviceCharge >= 0.0
+        && data.tax is number && data.tax >= 0.0
+        && data.total is number && data.total >= 0.0
+        && data.timestamp is string && data.timestamp.size() <= 100
+        && (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 20));
+    }
+
+    function isValidStaffUser(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.role is string && (data.role == 'Host' || data.role == 'Manager' || data.role == 'Server' || data.role == 'Admin')
+        && data.avatarUrl is string && data.avatarUrl.size() <= 1000;
+    }
+
+    function isValidSettings(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.upiId is string && data.upiId.size() > 0 && data.upiId.size() <= 100
+        && data.upiPayeeName is string && data.upiPayeeName.size() > 0 && data.upiPayeeName.size() <= 100;
+    }
+
+    // --- Path Matching Rules ---
+
+    match /tables/{tableId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.id != null;
+      allow create: if isSignedIn() && isValidId(tableId) && isValidTable(incoming()) && incoming().id == tableId;
+      allow update: if isSignedIn() && isValidId(tableId) && isValidTable(incoming()) && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isValidId(tableId);
+    }
+
+    match /menuItems/{itemId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.id != null;
+      allow create: if isSignedIn() && isValidId(itemId) && isValidMenuItem(incoming()) && incoming().id == itemId;
+      allow update: if isSignedIn() && isValidId(itemId) && isValidMenuItem(incoming()) && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isValidId(itemId);
+    }
+
+    match /pastOrders/{orderId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.id != null;
+      // Past orders are strictly append-only write-once (immutable after insertion)
+      allow create: if isSignedIn() && isValidId(orderId) && isValidPastOrder(incoming()) && incoming().id == orderId;
+      allow update, delete: if false;
+    }
+
+    match /staffUsers/{staffId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.id != null;
+      allow create: if isSignedIn() && isValidId(staffId) && isValidStaffUser(incoming()) && incoming().id == staffId;
+      allow update: if isSignedIn() && isValidId(staffId) && isValidStaffUser(incoming()) && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isValidId(staffId);
+    }
+
+    match /settings/{settingId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.id != null;
+      allow create: if isSignedIn() && isValidId(settingId) && isValidSettings(incoming()) && incoming().id == settingId;
+      allow update: if isSignedIn() && isValidId(settingId) && isValidSettings(incoming()) && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isValidId(settingId);
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "Table": {
+      "title": "Dining Table",
+      "description": "Represents a dining table on the restaurant floor map",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID of the table" },
+        "number": { "type": "integer", "description": "Table display number" },
+        "capacity": { "type": "integer", "description": "Seating capacity" },
+        "status": { "type": "string", "enum": ["available", "occupied", "reserved"], "description": "Current occupancy status" },
+        "guestCount": { "type": "integer", "description": "Current number of seated guests" },
+        "currentOrder": { "type": "array", "description": "Items ordered by the table" },
+        "notes": { "type": "string", "description": "Specific server instructions or allergies notes" },
+        "reservationName": { "type": "string", "description": "Reservation primary guest name" },
+        "reservationTime": { "type": "string", "description": "Reservation targeted timing" }
+      },
+      "required": ["id", "number", "capacity", "status"]
+    },
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "A food or beverage selectable menu offering",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique catalog ID" },
+        "name": { "type": "string", "description": "Name of dish or drink" },
+        "price": { "type": "number", "description": "Price in INR" },
+        "category": { "type": "string", "enum": ["Appetizers", "Main Course", "Desserts", "Drinks"], "description": "Kitchen section category" },
+        "emoji": { "type": "string", "description": "Visual emoji badge" },
+        "description": { "type": "string", "description": "Detailed ingredients description" },
+        "inStock": { "type": "boolean", "description": "Inventory stock flag" }
+      },
+      "required": ["id", "name", "price", "category", "inStock"]
+    },
+    "PastOrder": {
+      "title": "Past Order Ticket",
+      "description": "Settled historic billing and order metrics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique order receipt ID" },
+        "tableNumber": { "type": "integer", "description": "The table number serviced" },
+        "guestCount": { "type": "integer", "description": "Number of fed guests" },
+        "items": { "type": "array", "description": "Breakdown listing of culinary sales" },
+        "subtotal": { "type": "number", "description": "Cumulative item subtotal" },
+        "serviceCharge": { "type": "number", "description": "10% service charge fee" },
+        "tax": { "type": "number", "description": "8% VAT sales taxes" },
+        "total": { "type": "number", "description": "Grand total paid order value" },
+        "timestamp": { "type": "string", "description": "ISO timestamp checkout completion" }
+      },
+      "required": ["id", "tableNumber", "guestCount", "subtotal", "serviceCharge", "tax", "total", "timestamp"]
+    },
+    "StaffUser": {
+      "title": "Staff Profile",
+      "description": "Service crew, hosts, servers or manager user records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "User identifier (PIN-based or Google UID)" },
+        "name": { "type": "string", "description": "Full staff display name" },
+        "role": { "type": "string", "enum": ["Host", "Manager", "Server", "Admin"], "description": "Access privilege role" },
+        "pin": { "type": "string", "description": "4-digit pin or empty for google account" },
+        "avatarUrl": { "type": "string", "description": "Staff avatar image photo URL" },
+        "email": { "type": "string", "description": "Staff email address" }
+      },
+      "required": ["id", "name", "role", "avatarUrl"]
+    },
+    "TerminalSettings": {
+      "title": "Terminal Settings",
+      "description": "General settings configuration for the host terminal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique settings document ID (e.g. terminal)" },
+        "upiId": { "type": "string", "description": "BHIM UPI VPA addressing" },
+        "upiPayeeName": { "type": "string", "description": "Payee account display name" }
+      },
+      "required": ["id", "upiId", "upiPayeeName"]
+    }
+  },
+  "firestore": {
+    "/tables/{tableId}": {
+      "schema": "Table",
+      "description": "Dynamic state and orders of dining tables"
+    },
+    "/menuItems/{itemId}": {
+      "schema": "MenuItem",
+      "description": "List of active restaurant kitchen menu and price indexes"
+    },
+    "/pastOrders/{orderId}": {
+      "schema": "PastOrder",
+      "description": "Log records of cash drawer billing tickets"
+    },
+    "/staffUsers/{staffId}": {
+      "schema": "StaffUser",
+      "description": "Consolidated authenticated team roster profiles"
+    },
+    "/settings/{settingId}": {
+      "schema": "TerminalSettings",
+      "description": "General settings configuration for the terminal"
+    }
+  }
+}
