@@ -17,6 +17,7 @@ import { signOut } from 'firebase/auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'floor' | 'menu' | 'history'>('floor');
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   
   // Staff User Login State
   const [currentUser, setCurrentUser] = useState<StaffUser | null>(null);
@@ -111,6 +112,17 @@ export default function App() {
         printerEnabled: savedPrinterEnabled !== 'false'
       });
     }
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // Real-time synchronization with Firestore
@@ -587,9 +599,23 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-neutral-900">Benny Bill</h1>
-              <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 font-bold tracking-wider uppercase mt-0.5">
-                <Clock size={11} /> 
-                <span>May 20, 2026</span>
+              <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-bold tracking-wider uppercase mt-0.5">
+                <div className="flex items-center gap-1.5">
+                  <Clock size={11} /> 
+                  <span>May 20, 2026</span>
+                </div>
+                <span>•</span>
+                {isOnline ? (
+                  <span className="flex items-center gap-1.5 text-emerald-600 font-extrabold normal-case">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Cloud Synced
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-amber-600 font-extrabold normal-case">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    Offline Cache Mode
+                  </span>
+                )}
               </div>
             </div>
           </div>

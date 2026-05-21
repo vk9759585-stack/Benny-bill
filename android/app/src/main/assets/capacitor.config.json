@@ -1,0 +1,8 @@
+{
+	"appId": "com.Bennybill.myapp",
+	"appName": "Benny Bill",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	}
+}

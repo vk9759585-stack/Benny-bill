@@ -1,6 +1,7 @@
 {
   "name": "Benny Bill",
   "description": "Benny Bill: An interactive high-fidelity table terminal and floor cashier platform featuring offline subnets, instant wireless thermal printing, and BHIM UPI QR generation.",
+  "packageName": "com.Bennybill.myapp",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
